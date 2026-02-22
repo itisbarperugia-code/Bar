@@ -165,6 +165,11 @@ function openAuthGate() {
 function closeAuthGate() {
   authGate.classList.remove("open");
   document.body.classList.remove("auth-locked");
+  // Reset cards for next open
+  const cardMain = document.getElementById("authCardMain");
+  const cardVerify = document.getElementById("authCardVerify");
+  if (cardMain) cardMain.hidden = false;
+  if (cardVerify) cardVerify.hidden = true;
 }
 
 function requireVerifiedUser(message = "Devi accedere e verificare l'email prima di ordinare.") {
@@ -212,16 +217,30 @@ function setAuthMode(mode) {
 }
 
 function showVerifyState(user) {
-  authVerifyText.textContent = `Abbiamo inviato una email di verifica a ${user.email}. Confermala e poi premi "Ho verificato".`;
+  const cardMain = document.getElementById("authCardMain");
+  const cardVerify = document.getElementById("authCardVerify");
+  const verifyText = document.getElementById("authVerifyText");
+  if (verifyText) verifyText.textContent = `Abbiamo inviato un link di verifica a ${user.email}. Clicca il link e poi premi "Ho verificato".`;
+  if (cardMain) cardMain.hidden = true;
+  if (cardVerify) cardVerify.hidden = false;
   authVerifyBox.hidden = false;
 }
 
 function showBannedState() {
   const bannedEmail = auth.currentUser?.email || "questo account";
-  authTitle.textContent = "Account bloccato";
-  authSubtitle.textContent = "Non puoi effettuare ordini con questo account.";
-  authForm.style.display = "none";
-  authVerifyText.textContent = `L'email ${bannedEmail} e stata bannata dal barista. Contatta il bar per assistenza.`;
+  const cardMain = document.getElementById("authCardMain");
+  const cardVerify = document.getElementById("authCardVerify");
+  // Show verify card with banned message
+  if (cardMain) cardMain.hidden = true;
+  if (cardVerify) {
+    cardVerify.hidden = false;
+    const icon = cardVerify.querySelector(".verify-icon");
+    if (icon) icon.textContent = "🚫";
+    const h2 = cardVerify.querySelector("h2");
+    if (h2) h2.textContent = "Account bloccato";
+  }
+  const verifyText = document.getElementById("authVerifyText");
+  if (verifyText) verifyText.textContent = `L'email ${bannedEmail} è stata bannata dal barista. Contatta il bar per assistenza.`;
   authVerifyBox.hidden = false;
   if (resendVerifyBtn) resendVerifyBtn.style.display = "none";
   if (checkVerifyBtn) checkVerifyBtn.style.display = "none";
@@ -270,7 +289,7 @@ function renderMenu() {
         </div>
         <div class="panino-right">
           <div class="panino-price">${Number(p.prezzo || 0).toFixed(2).replace(".", ",")} <span>EUR</span></div>
-          <button class="add-btn ${canOrderUnlocked ? "" : "is-locked"}" data-name="${sanitize(p.nome)}" data-price="${p.prezzo}" ${canOrderUnlocked ? "" : "disabled"}>+</button>
+          <button class="add-btn ${canOrderUnlocked ? "" : "is-locked"}" data-name="${sanitize(p.nome)}" data-price="${Number(p.prezzo || 0)}" ${canOrderUnlocked ? "" : "disabled"}>+</button>
         </div>
       </div>`
     )
@@ -323,7 +342,10 @@ function renderCart() {
     const prevVal = sel.value;
     sel.innerHTML =
       '<option value="">Seleziona orario...</option>' +
-      orariDisponibili.map((o) => `<option value="${o}" ${o === prevVal ? "selected" : ""}>${o}</option>`).join("");
+      orariDisponibili.map((o) => {
+        const safe = sanitize(o);
+        return `<option value="${safe}" ${o === prevVal ? "selected" : ""}>${safe}</option>`;
+      }).join("");
   }
 
   el.innerHTML = cart
@@ -331,7 +353,7 @@ function renderCart() {
       (item, idx) => `
       <div class="drawer-item">
         <div>
-          <div class="drawer-item-name">${item.name}</div>
+          <div class="drawer-item-name">${sanitize(item.name)}</div>
           <div class="drawer-item-price">EUR ${item.price.toFixed(2)} cad.</div>
         </div>
         <div class="drawer-controls">
@@ -447,7 +469,9 @@ async function sendOrder() {
   btn.textContent = "Invio in corso...";
 
   try {
-    const orderNum = Math.floor(1000 + Math.random() * 9000);
+    const orderNum = Array.from(crypto.getRandomValues(new Uint8Array(5)))
+      .map(b => b.toString(36).padStart(2,'0'))
+      .join('').toUpperCase().slice(0, 8);
     await addDoc(collection(db, "ordini"), {
       numero: orderNum,
       nome,
@@ -476,7 +500,7 @@ async function sendOrder() {
     showToast(`Ordine #${orderNum} inviato con successo.`, "success");
   } catch (e) {
     console.error(e);
-    showToast(`Errore invio ordine: ${e.message}`, "error", 5000);
+    showToast("Errore nell'invio dell'ordine. Riprova.", "error", 5000);
     btn.disabled = false;
     btn.textContent = "Conferma ordine";
   }
@@ -583,7 +607,17 @@ authForm.addEventListener("submit", async (e) => {
     }
   } catch (err) {
     console.error(err);
-    showToast(`Errore autenticazione: ${err.message}`, "error", 5200);
+    const authErrMap = {
+      'auth/email-already-in-use': 'Email già registrata. Prova ad accedere.',
+      'auth/wrong-password': 'Password errata.',
+      'auth/invalid-credential': 'Email o password errati.',
+      'auth/user-not-found': 'Nessun account trovato.',
+      'auth/weak-password': 'Password troppo corta (minimo 6 caratteri).',
+      'auth/too-many-requests': 'Troppi tentativi. Riprova tra qualche minuto.',
+      'auth/invalid-email': 'Email non valida.',
+      'auth/network-request-failed': 'Errore di rete. Controlla la connessione.',
+    };
+    showToast(authErrMap[err.code] || 'Errore di accesso. Riprova.', "error", 5200);
   } finally {
     authSubmitBtn.disabled = false;
   }
@@ -599,7 +633,7 @@ resendVerifyBtn.addEventListener("click", async () => {
     await sendEmailVerification(auth.currentUser);
     showToast("Email di verifica inviata nuovamente.", "success");
   } catch (err) {
-    showToast(`Errore invio email: ${err.message}`, "error");
+    showToast("Errore durante l'invio dell'email. Attendi qualche secondo.", "error");
   }
 });
 
@@ -622,7 +656,7 @@ checkVerifyBtn.addEventListener("click", async () => {
       showToast("Email non ancora verificata.", "warning");
     }
   } catch (err) {
-    showToast(`Errore verifica stato: ${err.message}`, "error");
+    showToast("Errore nel controllo della verifica. Riprova.", "error");
   }
 });
 
@@ -632,14 +666,56 @@ async function performLogout() {
     cart = [];
     renderCart();
     closeCart();
+    // Reset to main card
+    const cardMain = document.getElementById("authCardMain");
+    const cardVerify = document.getElementById("authCardVerify");
+    if (cardMain) cardMain.hidden = false;
+    if (cardVerify) {
+      cardVerify.hidden = true;
+      // Reset verify card in case it was showing banned state
+      const icon = cardVerify.querySelector(".verify-icon");
+      if (icon) icon.textContent = "📧";
+      const h2 = cardVerify.querySelector("h2");
+      if (h2) h2.textContent = "Controlla la tua email";
+      if (resendVerifyBtn) resendVerifyBtn.style.display = "block";
+      if (checkVerifyBtn) checkVerifyBtn.style.display = "block";
+    }
     showToast("Sei uscito dall'account.", "info");
   } catch (err) {
-    showToast(`Errore logout: ${err.message}`, "error");
+    showToast("Errore durante il logout.", "error");
   }
 }
 
 logoutBtn.addEventListener("click", performLogout);
 if (logoutHeaderBtn) logoutHeaderBtn.addEventListener("click", performLogout);
+
+// Back to login from verify card — delete unverified account and return
+const backToLoginBtn = document.getElementById("backToLoginBtn");
+if (backToLoginBtn) {
+  backToLoginBtn.addEventListener("click", async () => {
+    const user = auth.currentUser;
+    if (user && !user.emailVerified) {
+      try { await user.delete(); } catch(e) { /* account già eliminato o sessione scaduta */ }
+    }
+    await signOut(auth).catch(() => {});
+    cart = [];
+    renderCart();
+    const cardMain = document.getElementById("authCardMain");
+    const cardVerify = document.getElementById("authCardVerify");
+    if (cardMain) cardMain.hidden = false;
+    if (cardVerify) {
+      cardVerify.hidden = true;
+      const icon = cardVerify.querySelector(".verify-icon");
+      if (icon) icon.textContent = "📧";
+      const h2 = cardVerify.querySelector("h2");
+      if (h2) h2.textContent = "Controlla la tua email";
+      if (resendVerifyBtn) resendVerifyBtn.style.display = "block";
+      if (checkVerifyBtn) checkVerifyBtn.style.display = "block";
+    }
+    setAuthMode("register");
+    showToast("Registrazione annullata. Puoi riprovare.", "info");
+  });
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {

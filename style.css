@@ -242,6 +242,11 @@ main { max-width: 680px; margin: 0 auto; padding: 32px 20px 100px; }
   border-radius: 16px;
   padding: 24px;
   box-shadow: 0 18px 40px rgba(0,0,0,0.2);
+  animation: authCardIn 0.25s ease;
+}
+@keyframes authCardIn {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 .auth-card h2 {
   font-size: 1.4rem;
@@ -253,6 +258,35 @@ main { max-width: 680px; margin: 0 auto; padding: 32px 20px 100px; }
   font-size: 0.92rem;
   line-height: 1.5;
 }
+.auth-card-verify {
+  text-align: center;
+}
+.auth-card-verify h2 {
+  margin-top: 8px;
+}
+.auth-card-verify p {
+  margin-top: 8px;
+}
+.verify-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+.auth-back-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+  transition: color 0.2s;
+}
+.auth-back-btn:hover { color: #555; }
 .auth-form {
   margin-top: 14px;
   display: flex;

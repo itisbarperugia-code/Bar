@@ -12,8 +12,9 @@
 <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
 <div class="toast-stack right" id="toastStackRight" aria-live="polite" aria-atomic="true"></div>
 
+<!-- CARD 1: Login / Registrazione -->
 <div class="auth-gate" id="authGate">
-  <div class="auth-card">
+  <div class="auth-card" id="authCardMain">
     <h2 id="authTitle">Registrazione richiesta</h2>
     <p id="authSubtitle">Per effettuare ordini devi registrarti e confermare la tua email.</p>
 
@@ -32,14 +33,20 @@
       <button type="submit" class="auth-primary" id="authSubmitBtn">Registrati</button>
       <button type="button" class="auth-secondary" id="authToggleModeBtn">Ho gia un account</button>
     </form>
+  </div>
 
-    <div class="auth-verify-box" id="authVerifyBox" hidden>
-      <p id="authVerifyText">Controlla la tua casella email e clicca sul link di verifica.</p>
-      <div class="auth-actions">
-        <button type="button" class="auth-secondary" id="resendVerifyBtn">Invia di nuovo email</button>
-        <button type="button" class="auth-primary" id="checkVerifyBtn">Ho verificato</button>
-        <button type="button" class="auth-link" id="logoutBtn">Esci</button>
-      </div>
+  <!-- CARD 2: Verifica email (separata) -->
+  <div class="auth-card auth-card-verify" id="authCardVerify" hidden>
+    <button type="button" class="auth-back-btn" id="backToLoginBtn" title="Torna al login">← Torna al login</button>
+    <div class="verify-icon">📧</div>
+    <h2>Controlla la tua email</h2>
+    <p id="authVerifyText">Abbiamo inviato un link di verifica. Clicca il link e poi premi "Ho verificato".</p>
+    <!-- hidden box richiesto da script.js, vuoto -->
+    <div id="authVerifyBox" style="display:none"></div>
+    <div class="auth-actions" style="margin-top:20px">
+      <button type="button" class="auth-primary" id="checkVerifyBtn">Ho verificato ✓</button>
+      <button type="button" class="auth-secondary" id="resendVerifyBtn">Invia di nuovo email</button>
+      <button type="button" class="auth-link" id="logoutBtn">Esci</button>
     </div>
   </div>
 </div>

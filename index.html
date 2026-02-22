@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bar ITIS Volta - Perugia</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="true"></div>
+<div class="toast-stack right" id="toastStackRight" aria-live="polite" aria-atomic="true"></div>
+
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <h2 id="authTitle">Registrazione richiesta</h2>
+    <p id="authSubtitle">Per effettuare ordini devi registrarti e confermare la tua email.</p>
+
+    <form id="authForm" class="auth-form">
+      <label for="authEmail">Email</label>
+      <input id="authEmail" type="email" autocomplete="email" placeholder="nome@scuola.it" required>
+
+      <label for="authPassword">Password</label>
+      <input id="authPassword" type="password" autocomplete="new-password" placeholder="Almeno 6 caratteri" required>
+
+      <div id="authConfirmWrap">
+        <label for="authConfirm">Conferma password</label>
+        <input id="authConfirm" type="password" autocomplete="new-password" placeholder="Ripeti la password">
+      </div>
+
+      <button type="submit" class="auth-primary" id="authSubmitBtn">Registrati</button>
+      <button type="button" class="auth-secondary" id="authToggleModeBtn">Ho gia un account</button>
+    </form>
+
+    <div class="auth-verify-box" id="authVerifyBox" hidden>
+      <p id="authVerifyText">Controlla la tua casella email e clicca sul link di verifica.</p>
+      <div class="auth-actions">
+        <button type="button" class="auth-secondary" id="resendVerifyBtn">Invia di nuovo email</button>
+        <button type="button" class="auth-primary" id="checkVerifyBtn">Ho verificato</button>
+        <button type="button" class="auth-link" id="logoutBtn">Esci</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-handle"></div>
+  <div id="drawerContent">
+    <h3>Il tuo ordine</h3>
+    <div id="drawerItems"><div class="drawer-empty">Nessun panino selezionato</div></div>
+    <div id="drawerBottom" style="display:none">
+      <div class="student-form">
+        <label>Il tuo nome</label>
+        <input type="text" id="inputNome" placeholder="es. Marco">
+        <label>Classe</label>
+        <input type="text" id="inputClasse" placeholder="es. 3A">
+        <label>Orario di ritiro</label>
+        <select id="inputOrario" style="width:100%;padding:11px 14px;border:2px solid #e8e8e8;border-radius:10px;font-family:'Nunito',sans-serif;font-size:0.95rem;outline:none;background:#fff;transition:border-color 0.2s">
+          <option value="">Seleziona orario...</option>
+        </select>
+      </div>
+      <div class="drawer-total">
+        <span>Totale</span>
+        <span id="totalText">EUR 0.00</span>
+      </div>
+      <button class="order-btn" id="orderBtn">Conferma ordine</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="logo">
+    <div style="font-size:1.8rem">🥪</div>
+    <div class="logo-text">
+      <h1>Bar ITIS Volta</h1>
+      <span>Perugia</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="auth-badge" id="authBadge">Non autenticato</div>
+    <button class="logout-mini" id="logoutHeaderBtn" type="button" hidden>Esci</button>
+    <button class="cart-pill" id="cartBtn">Carrello (<span id="cartCount">0</span>)</button>
+  </div>
+</header>
+
+<div class="hero">
+  <h2>Ciao! Cosa mangi oggi?</h2>
+  <p>Fai il tuo ordine e passa a ritirarlo all'intervallo.</p>
+  <div class="orari">Intervallo: 10:30 - 11:00</div>
+</div>
+
+<main>
+  <div class="section-title">I nostri panini</div>
+  <div id="menuList"><div class="loading">Caricamento menu...</div></div>
+</main>
+
+<footer>Bar ITIS Alessandro Volta - Via Canali 55, Perugia</footer>
+
+<div class="payment-modal" id="paymentModal" hidden>
+  <div class="payment-card">
+    <h3>Metodo di pagamento</h3>
+    <p>Scegli come vuoi pagare questo ordine.</p>
+    <div class="payment-actions">
+      <button class="order-btn" id="payPickupBtn" type="button">Paga al ritiro</button>
+      <button class="auth-secondary" id="payNowBtn" type="button">Paga ora</button>
+      <button class="auth-link" id="closePaymentBtn" type="button">Annulla</button>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
